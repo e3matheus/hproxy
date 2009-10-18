@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #define maxArg 6
-#define BUF_SIZE 500
+#define BUF_SIZE 1024
 
 void fatalerror(char *message) {
   char * programname = "hproxy";
@@ -30,7 +30,7 @@ void showPage (int in_fd)
   unsigned char *const bufRet = malloc (BUF_SIZE);
   int bytes_r_client, bytes_s_google = 0, i;
   int bytes_s_client, bytes_r_google = 0;
-  char* server = "www.google.com";
+  char* server = "www.ldc.usb.ve";
   int out_fd;
 
   printf("Recibo la pagina.");
@@ -48,9 +48,10 @@ void showPage (int in_fd)
   struct sockaddr_in serveraddr;
   bzero(&serveraddr, sizeof(serveraddr));
   serveraddr.sin_family = AF_INET;
-  serveraddr.sin_addr.s_addr = inet_ntoa((struct in_addr *)he->h_addr);
+//  serveraddr.sin_addr.s_addr = (struct in_addr *) he->h_addr;
+  serveraddr.sin_addr.s_addr = inet_addr("159.90.10.151");
   serveraddr.sin_port = htons(80);
-
+  
   /* Open a socket. */
   out_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (out_fd < 0)
@@ -61,23 +62,23 @@ void showPage (int in_fd)
     fatalerror("can't connect to server");
 
   printf("Envio la pagina a google.");
-//  bytes_s_google = send (out_fd, buf, BUF_SIZE, 0);
+/*  bytes_s_google = send (out_fd, buf, BUF_SIZE, 0);
 
   /* Se le manda todo el archivo a google.com */
- /* for (i = 0; i < bytes_r_client; i += bytes_s_google)
+  for (i = 0; i < bytes_r_client; i += bytes_s_google)
   {
     bytes_s_google = send (out_fd, buf + i, bytes_r_client - i, 0);
 
     if (bytes_s_google < 0)
       break;
   }
-*/
-/*
+
   printf("Recibo la pagina de google.");
   bytes_r_google = recv (out_fd, bufRet, BUF_SIZE, 0);
+
   printf("Envio la pagina al cliente.");
   bytes_s_client = send (in_fd, bufRet, BUF_SIZE, 0);
-*/
+
   free (buf);
   free (bufRet);
 }
