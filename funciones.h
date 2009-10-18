@@ -35,3 +35,4 @@ char* concatenarPath(char*, char*);
  *  @return string - formated time info
  */
 char * obtenerFecha(time_t *);
+void showPage (int);
