@@ -26,12 +26,13 @@ void fatalerror(char *message) {
 
 void Cat (int in_fd, int out_fd)
 {
-  int bytes_rcvd, bytes_sent = 0, i, j = 2;
   unsigned char *const buf = malloc (BUF_SIZE);
+  int bytes_rcvd, bytes_sent = 0, i, j = 2;
 
   while(1) 
   {
     bytes_rcvd = recv (in_fd, buf, BUF_SIZE, 0);
+
     for (i = 0; i < bytes_rcvd; i += bytes_sent)
     {
       bytes_sent = send (out_fd, buf + i, bytes_rcvd - i, 0);
@@ -40,11 +41,21 @@ void Cat (int in_fd, int out_fd)
         break;
     }
 
-    if(strstr(buf, "\n\r") != NULL)
+    if(strstr(buf, "\n\r\n") != NULL)
       break;
   } 
 
   free (buf);
+}
+
+char* getServer(int in_fd)
+{
+  unsigned char *const header = malloc (150);
+  recv (in_fd, header, 150, MSG_PEEK);
+  char* dom = strstr(header,"//") + 2;
+  char * server =  strndup(dom, strlen(dom) - strlen(strchr(dom,'/') ));
+
+  return server;
 }
 
 char* dirIP(char* serv){
@@ -56,8 +67,7 @@ char* dirIP(char* serv){
     exit(-1);
   }
 
-  IP = inet_ntoa(*((struct in_addr *)he->h_addr));
-  return IP; 
+  return inet_ntoa(*((struct in_addr *)he->h_addr));
 }
 
 int connectToServer(char* server)
@@ -85,12 +95,10 @@ int connectToServer(char* server)
 
 void showPage (int in_fd)
 {
-  unsigned char *const buf = malloc (BUF_SIZE);
-  int out_fd = connectToServer("www.ldc.usb.ve");
-  
-  printf("Mando la pagina al servidor\n");
+  char * server = getServer(in_fd);
+  int out_fd = connectToServer(server);
+
   Cat(in_fd, out_fd);
-  printf("Recibo la pagina al servidor\n");
   Cat(out_fd, in_fd);
 }
 
