@@ -26,18 +26,23 @@ void fatalerror(char *message) {
 
 void Cat (int in_fd, int out_fd)
 {
+  int bytes_rcvd, bytes_sent = 0, i, j = 2;
   unsigned char *const buf = malloc (BUF_SIZE);
-  int bytes_rcvd, bytes_sent = 0, i;
 
-      bytes_rcvd = recv (in_fd, buf, BUF_SIZE, 0);
-
-      for (i = 0; i < bytes_rcvd; i += bytes_sent)
+  while(1) 
   {
-    bytes_sent = send (out_fd, buf + i, bytes_rcvd - i, 0);
+    bytes_rcvd = recv (in_fd, buf, BUF_SIZE, 0);
+    for (i = 0; i < bytes_rcvd; i += bytes_sent)
+    {
+      bytes_sent = send (out_fd, buf + i, bytes_rcvd - i, 0);
 
-    if (bytes_sent < 0)
+      if (bytes_sent < 0)
+        break;
+    }
+
+    if(strstr(buf, "\n\r") != NULL)
       break;
-  }
+  } 
 
   free (buf);
 }
@@ -50,9 +55,8 @@ char* dirIP(char* serv){
     printf("error de gethostbyname()\n");
     exit(-1);
   }
-  
+
   IP = inet_ntoa(*((struct in_addr *)he->h_addr));
-  printf("La direccion ip es %s \n", IP);
   return IP; 
 }
 
@@ -66,7 +70,7 @@ int connectToServer(char* server)
   serveraddr.sin_family = AF_INET;
   serveraddr.sin_addr.s_addr = inet_addr(dirIP(server));
   serveraddr.sin_port = htons(80);
-  
+
   /* Open a socket. */
   out = socket(AF_INET, SOCK_STREAM, 0);
   if (out < 0)
@@ -83,8 +87,10 @@ void showPage (int in_fd)
 {
   unsigned char *const buf = malloc (BUF_SIZE);
   int out_fd = connectToServer("www.ldc.usb.ve");
- 
+  
+  printf("Mando la pagina al servidor\n");
   Cat(in_fd, out_fd);
+  printf("Recibo la pagina al servidor\n");
   Cat(out_fd, in_fd);
 }
 

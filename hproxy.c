@@ -66,7 +66,6 @@ int main(int argc, char** argv)
       /* I'm the child. */
       close(sockfd);
       showPage(newsockfd);
-      printf("Escribio\n");
       exit(EXIT_SUCCESS);
     }
     else
