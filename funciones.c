@@ -24,6 +24,24 @@ void fatalerror(char *message) {
   exit(1);
 }
 
+void Cat (int in_fd, int out_fd)
+{
+  unsigned char *const buf = malloc (BUF_SIZE);
+  int bytes_rcvd, bytes_sent = 0, i;
+
+      bytes_rcvd = recv (in_fd, buf, BUF_SIZE, 0);
+
+      for (i = 0; i < bytes_rcvd; i += bytes_sent)
+  {
+    bytes_sent = send (out_fd, buf + i, bytes_rcvd - i, 0);
+
+    if (bytes_sent < 0)
+      break;
+  }
+
+  free (buf);
+}
+
 char* dirIP(char* serv){
   char * IP;
   struct hostent *he;
@@ -38,52 +56,36 @@ char* dirIP(char* serv){
   return IP; 
 }
 
-void showPage (int in_fd)
+int connectToServer(char* server)
 {
-  unsigned char *const buf = malloc (BUF_SIZE);
-  unsigned char *const bufRet = malloc (BUF_SIZE);
-  int bytes_r_client, bytes_s_google = 0, i;
-  int bytes_s_client, bytes_r_google = 0;
-  char* server = "www.ldc.usb.ve";
-  int out_fd;
+  int out;
+  struct sockaddr_in serveraddr;
 
-  //Recibo la pagina de paquete
-  bytes_r_client = recv (in_fd, buf, BUF_SIZE, 0);
-
+  /* Creando estructura de servidor */
+  bzero(&serveraddr, sizeof(serveraddr));
   serveraddr.sin_family = AF_INET;
   serveraddr.sin_addr.s_addr = inet_addr(dirIP(server));
-//  serveraddr.sin_addr.s_addr = inet_addr("159.90.10.151");
   serveraddr.sin_port = htons(80);
   
   /* Open a socket. */
-  out_fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (out_fd < 0)
+  out = socket(AF_INET, SOCK_STREAM, 0);
+  if (out < 0)
     fatalerror("can't open socket");
 
   /* Connect to the server. */
-  if (connect(out_fd , (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0)
+  if (connect(out , (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0)
     fatalerror("can't connect to server");
 
-  printf("Envio la pagina a google.");
-//  bytes_s_google = send (out_fd, buf, BUF_SIZE, 0);
+  return out;
+}
 
-  /* Se le manda todo el archivo a google.com */
-  for (i = 0; i < bytes_r_client; i += bytes_s_google)
-  {
-    bytes_s_google = send (out_fd, buf + i, bytes_r_client - i, 0);
-
-    if (bytes_s_google < 0)
-      break;
-  }
-
-  printf("Recibo la pagina de google.");
-  bytes_r_google = recv (out_fd, bufRet, BUF_SIZE, 0);
-
-  printf("Envio la pagina al cliente.");
-  bytes_s_client = send (in_fd, bufRet, BUF_SIZE, 0);
-
-  free (buf);
-  free (bufRet);
+void showPage (int in_fd)
+{
+  unsigned char *const buf = malloc (BUF_SIZE);
+  int out_fd = connectToServer("www.ldc.usb.ve");
+ 
+  Cat(in_fd, out_fd);
+  Cat(out_fd, in_fd);
 }
 
 int buscarLista(FILE* fd, char* input)
