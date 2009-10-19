@@ -26,23 +26,23 @@ void fatalerror(char *message) {
 
 void Cat (int in_fd, int out_fd)
 {
-  unsigned char *const buf = malloc (BUF_SIZE);
   int bytes_rcvd, bytes_sent = 0, i, j = 2;
+  unsigned char *const buf = malloc (BUF_SIZE);
 
   while(1) 
   {
     bytes_rcvd = recv (in_fd, buf, BUF_SIZE, 0);
-
-    for (i = 0; i < bytes_rcvd; i += bytes_sent)
+    /*for (i = 0; i < bytes_rcvd; i += bytes_sent)
     {
-      bytes_sent = send (out_fd, buf + i, bytes_rcvd - i, 0);
-
+      printf("%d\n", i);
       if (bytes_sent < 0)
         break;
     }
-
+   */
+    bytes_sent = send (out_fd, buf, bytes_rcvd, 0);
     if(strstr(buf, "\n\r\n") != NULL)
       break;
+
   } 
 
   free (buf);
