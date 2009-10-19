@@ -27,10 +27,10 @@ void fatalerror(char *message) {
 void Cat (int in_fd, int out_fd)
 {
   int bytes_rcvd, bytes_sent = 0, i, j;
+  unsigned char * buf = malloc (BUF_SIZE); 
 
   do
   {
-    unsigned char * buf = malloc (BUF_SIZE); 
     bytes_rcvd = recv (in_fd, buf, BUF_SIZE, 0);
     if (bytes_rcvd == 0)
       break;
@@ -39,10 +39,13 @@ void Cat (int in_fd, int out_fd)
 
     i = (strstr(buf, "\r\n\r\n") == NULL); 
     j = strlen(buf) == BUF_SIZE; 
-    
-    free (buf);
+    /* printf("*******************************buf = %d***************************************\n", strlen(buf));
+    printf("*******************************bytes = %d*************************************\n", bytes_rcvd);
+    bzero(&buf, strlen(buf)); */
+
   } while ( i || j ) ; 
 
+  free (buf);
 }
 
 char* getServer(int in_fd)
@@ -100,14 +103,21 @@ void complexRes(int in_fd){
   send (in_fd, header, strlen(header), 0);
 }
 
-
 void showPage (int in_fd)
 {
   char * server = getServer(in_fd);
   int out_fd = connectToServer(server);
 
-  Cat(in_fd, out_fd);
-  Cat(out_fd, in_fd);
+  //Chequeo de Paginas Prohibidas.
+  if (strcmp(server, "www.google.com") == 0)    
+    simpleRes(in_fd);
+  else if  (strcmp(server, "www.yahoo.com") == 0)   
+    complexRes(in_fd);
+  else
+  {
+    Cat(in_fd, out_fd);
+    Cat(out_fd, in_fd);
+  }
 }
 
 int buscarLista(FILE* fd, char* input)

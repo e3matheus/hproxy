@@ -30,8 +30,6 @@ int main(int argc, char** argv)
 
   crearLog(argc, argv);
 
-//  printf("Que pagina desea abrir?\n");
-//  scanf("%s", input);
 
   /* Open a TCP socket. */
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -71,7 +69,17 @@ int main(int argc, char** argv)
     else
       /* I'm the parent. */
       close(newsockfd);
-  }
+/*    while(1){
+      printf("Que pagina desea abrir?\n");
+      scanf("%s", input);
+      if (strcmp((char *)input,"q") == 0)
+      { 
+        printf("Salida");
+        break;}
+      else if (strcmp((char *)input,"l") == 0)
+        printf("Imprime Log");
+    }
+*  }
 
   return 0;
 }
