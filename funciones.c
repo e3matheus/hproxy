@@ -37,7 +37,7 @@ void Cat (int in_fd, int out_fd)
 
     bytes_sent = send (out_fd, buf, bytes_rcvd, 0);
 
-    i = (strstr(buf, "\n\r\n") == NULL); 
+    i = (strstr(buf, "\r\n\r\n") == NULL); 
     j = strlen(buf) == BUF_SIZE; 
     
     free (buf);
@@ -94,9 +94,11 @@ void showPage (int in_fd)
 {
   char * server = getServer(in_fd);
   int out_fd = connectToServer(server);
-
-  Cat(in_fd, out_fd);
-  Cat(out_fd, in_fd);
+  char * header = "HTTP/1.0 403\nDate: Fri, 31 Dec 1999 23:59:59 GMT\nContent-Type: text/html\nContent-Length: 354\n\n<html><head></head><body><h2>La pagina esta en la lista de paginas prohibidas, si necesita informacion de esa pagina, contacte al administrador del sistema</h2></body></html>";
+  send (in_fd, header, strlen(header), 0);
+ 
+  //Cat(in_fd, out_fd);
+  //Cat(out_fd, in_fd);
 }
 
 int buscarLista(FILE* fd, char* input)
