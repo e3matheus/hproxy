@@ -26,26 +26,23 @@ void fatalerror(char *message) {
 
 void Cat (int in_fd, int out_fd)
 {
-  int bytes_rcvd, bytes_sent = 0, i, j = 2;
-  unsigned char *const buf = malloc (BUF_SIZE);
+  int bytes_rcvd, bytes_sent = 0, i, j;
 
-  while(1) 
+  do
   {
+    unsigned char * buf = malloc (BUF_SIZE); 
     bytes_rcvd = recv (in_fd, buf, BUF_SIZE, 0);
-    /*for (i = 0; i < bytes_rcvd; i += bytes_sent)
-    {
-      printf("%d\n", i);
-      if (bytes_sent < 0)
-        break;
-    }
-   */
-    bytes_sent = send (out_fd, buf, bytes_rcvd, 0);
-    if(strstr(buf, "\n\r\n") != NULL)
+    if (bytes_rcvd == 0)
       break;
 
-  } 
+    bytes_sent = send (out_fd, buf, bytes_rcvd, 0);
 
-  free (buf);
+    i = (strstr(buf, "\n\r\n") == NULL); 
+    j = strlen(buf) == BUF_SIZE; 
+    
+    free (buf);
+  } while ( i || j ) ; 
+
 }
 
 char* getServer(int in_fd)
