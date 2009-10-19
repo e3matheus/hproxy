@@ -64,7 +64,7 @@ char* dirIP(char* serv){
     exit(-1);
   }
 
-  return inet_ntoa(*((struct in_addr *)he->h_addr));
+  return inet_ntoa((struct in_addr *)he->h_addr);
 }
 
 int connectToServer(char* server)
@@ -90,15 +90,24 @@ int connectToServer(char* server)
   return out;
 }
 
+void simpleRes(int in_fd){
+  char * header = "HTTP/1.0 403\nDate: Fri, 31 Dec 1999 23:59:59 GMT\nContent-Type: text/html\nContent-Length: 354\n\n<html><head></head><body><h2>La pagina esta en la lista de paginas prohibidas, si necesita informacion de esa pagina, contacte al administrador del sistema</h2></body></html>";
+  send (in_fd, header, strlen(header), 0);
+}
+
+void complexRes(int in_fd){
+  char * header = "HTTP/1.0 403\nDate: Fri, 31 Dec 1999 23:59:59 GMT\nContent-Type: text/html\nContent-Length: 354\n\n<html><head></head><body><h2>La pagina esta contenida dentro de una pagina prohibida, si necesita informacion de esa pagina, contacte al administrador del sistema</h2></body></html>";
+  send (in_fd, header, strlen(header), 0);
+}
+
+
 void showPage (int in_fd)
 {
   char * server = getServer(in_fd);
   int out_fd = connectToServer(server);
-  char * header = "HTTP/1.0 403\nDate: Fri, 31 Dec 1999 23:59:59 GMT\nContent-Type: text/html\nContent-Length: 354\n\n<html><head></head><body><h2>La pagina esta en la lista de paginas prohibidas, si necesita informacion de esa pagina, contacte al administrador del sistema</h2></body></html>";
-  send (in_fd, header, strlen(header), 0);
- 
-  //Cat(in_fd, out_fd);
-  //Cat(out_fd, in_fd);
+
+  Cat(in_fd, out_fd);
+  Cat(out_fd, in_fd);
 }
 
 int buscarLista(FILE* fd, char* input)

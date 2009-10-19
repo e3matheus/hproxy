@@ -24,6 +24,14 @@ void chequearMaxArgumentos(int);
 void crearLog(int, char**);
 char* chequearPuerto(int, char**);
 
+void simpleRes(int);
+void complexRes(int);
+int connectToServer(char* );
+char* dirIP(char*);
+char* getServer(int);
+void Cat (int , int );
+void fatalerror(char *);
+
 char* concatenarPath(char*, char*);
 /** Formats time data from stat
  *  and returns a string with the
