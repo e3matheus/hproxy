@@ -13,7 +13,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#define maxArg 6
+#define maxArg 7
 #define BUF_SIZE 1024
 
 void fatalerror(char *message) {
@@ -32,6 +32,7 @@ void CatClient (int in_fd, int out_fd)
   bzero(buf, sizeof(buf));
   bytes_rcvd = read (in_fd, buf, BUF_SIZE);
   write (out_fd, buf, bytes_rcvd);
+//  puts (buf);
 
   free (buf);
 }
@@ -40,18 +41,19 @@ void CatServ (int in_fd, int out_fd)
 {
   int bytes_rcvd = 1, bytes_sent = 0, i, j, cont = 0;
   unsigned char * buf = (char *) malloc (BUF_SIZE); 
-  
+
   while (bytes_rcvd > 0)
   {
-  bzero(buf, sizeof(buf));
-  bytes_rcvd = read (in_fd, buf, BUF_SIZE);
-  write (out_fd, buf, bytes_rcvd);
+    bzero(buf, sizeof(buf));
+    bytes_rcvd = read (in_fd, buf, BUF_SIZE);
+    write (out_fd, buf, bytes_rcvd);
+    //  puts (buf);
   }
 
   free (buf);
 }
 
-char* getServer(int in_fd)
+char* getHost(int in_fd)
 {
   unsigned char *const header = malloc (150);
   recv (in_fd, header, 150, MSG_PEEK);
@@ -59,6 +61,13 @@ char* getServer(int in_fd)
   char * server =  strndup(dom, strlen(dom) - strlen(strchr(dom,'/') ));
 
   return server;
+}
+
+void getInfo(int in_fd, char* URL, char* host)
+{
+  char * header = malloc (200);
+  recv (in_fd, header, 200, MSG_PEEK);
+  sscanf(header, "GET %s HTTP/1.0\nHost: %s\n", URL, host);
 }
 
 char* dirIP(char* serv){
@@ -106,22 +115,20 @@ void complexRes(int in_fd){
   send (in_fd, header, strlen(header), 0);
 }
 
-void showPage (int in_fd)
+void showPage (int in_fd, char * host)
 {
-  char * server = getServer(in_fd);
-  int out_fd = connectToServer(server);
+  int out_fd = connectToServer(host);
 
   //Chequeo de Paginas Prohibidas.
-  if (strcmp(server, "www.google.com") == 0)    
+  if (strcmp(host, "www.google.com") == 0)    
     simpleRes(in_fd);
-  else if  (strcmp(server, "www.yahoo.com") == 0)   
+  else if  (strcmp(host, "www.yahoo.com") == 0)   
     complexRes(in_fd);
   else
   {
     CatClient(in_fd, out_fd);
     CatServ(out_fd, in_fd);
   }
-  printf("termine\n");
 }
 
 int buscarLista(FILE* fd, char* input)
@@ -139,16 +146,17 @@ int buscarLista(FILE* fd, char* input)
   return 0;
 }
 
-void crearLog(int numArgumentos, char** argv)
+FILE* crearLog(int numArgumentos, char** argv)
 {
   int cont = 1;
+  FILE * fd;
   while (cont < numArgumentos)
   {
     if  (strcmp(argv[cont],"-l") == 0)
     {
-      if (fopen(argv[cont + 1],"a+")==NULL)
+      if ((fd = fopen(argv[cont + 1],"a+")) != NULL)
       {
-        printf("El archivo de error no pudo ser creado");
+        return fd;
       }
     }
     cont +=2;

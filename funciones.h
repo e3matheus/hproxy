@@ -21,14 +21,14 @@
 
 FILE* abreArchivoDirecciones(int, char**);
 void chequearMaxArgumentos(int);
-void crearLog(int, char**);
+FILE* crearLog(int, char**);
 char* chequearPuerto(int, char**);
 
 void simpleRes(int);
 void complexRes(int);
 int connectToServer(char* );
 char* dirIP(char*);
-char* getServer(int);
+char* getHost(int);
 void CatClient (int , int );
 void CatServ (int , int );
 void fatalerror(char *);
@@ -44,4 +44,4 @@ char* concatenarPath(char*, char*);
  *  @return string - formated time info
  */
 char * obtenerFecha(time_t *);
-void showPage (int);
+void showPage (int, char*);
