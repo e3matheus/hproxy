@@ -79,7 +79,7 @@ int main(int argc, char** argv)
       else if (strcmp((char *)input,"l") == 0)
         printf("Imprime Log");
     }
-*  }
+*/  }
 
   return 0;
 }

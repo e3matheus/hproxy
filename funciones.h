@@ -29,7 +29,8 @@ void complexRes(int);
 int connectToServer(char* );
 char* dirIP(char*);
 char* getServer(int);
-void Cat (int , int );
+void CatClient (int , int );
+void CatServ (int , int );
 void fatalerror(char *);
 
 char* concatenarPath(char*, char*);

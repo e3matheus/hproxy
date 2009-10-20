@@ -24,26 +24,29 @@ void fatalerror(char *message) {
   exit(1);
 }
 
-void Cat (int in_fd, int out_fd)
+void CatClient (int in_fd, int out_fd)
 {
-  int bytes_rcvd, bytes_sent = 0, i, j;
-  unsigned char * buf = malloc (BUF_SIZE); 
+  int bytes_rcvd = 1, bytes_sent = 0, i, j, cont = 0;
+  unsigned char * buf = (char *) malloc (BUF_SIZE); 
 
-  do
+  bzero(buf, sizeof(buf));
+  bytes_rcvd = read (in_fd, buf, BUF_SIZE);
+  write (out_fd, buf, bytes_rcvd);
+
+  free (buf);
+}
+
+void CatServ (int in_fd, int out_fd)
+{
+  int bytes_rcvd = 1, bytes_sent = 0, i, j, cont = 0;
+  unsigned char * buf = (char *) malloc (BUF_SIZE); 
+  
+  while (bytes_rcvd > 0)
   {
-    bytes_rcvd = recv (in_fd, buf, BUF_SIZE, 0);
-    if (bytes_rcvd == 0)
-      break;
-
-    bytes_sent = send (out_fd, buf, bytes_rcvd, 0);
-
-    i = (strstr(buf, "\r\n\r\n") == NULL); 
-    j = strlen(buf) == BUF_SIZE; 
-    /* printf("*******************************buf = %d***************************************\n", strlen(buf));
-    printf("*******************************bytes = %d*************************************\n", bytes_rcvd);
-    bzero(&buf, strlen(buf)); */
-
-  } while ( i || j ) ; 
+  bzero(buf, sizeof(buf));
+  bytes_rcvd = read (in_fd, buf, BUF_SIZE);
+  write (out_fd, buf, bytes_rcvd);
+  }
 
   free (buf);
 }
@@ -115,9 +118,10 @@ void showPage (int in_fd)
     complexRes(in_fd);
   else
   {
-    Cat(in_fd, out_fd);
-    Cat(out_fd, in_fd);
+    CatClient(in_fd, out_fd);
+    CatServ(out_fd, in_fd);
   }
+  printf("termine\n");
 }
 
 int buscarLista(FILE* fd, char* input)
