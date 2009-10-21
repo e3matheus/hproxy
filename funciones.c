@@ -24,6 +24,24 @@ void fatalerror(char *message) {
   exit(1);
 }
 
+void getInfo(int in_fd, char* URL, char* host)
+{
+  char * header = malloc (200);
+  recv (in_fd, header, 200, MSG_PEEK);
+  sscanf(header, "GET %s HTTP/1.0\nHost: %s\n", URL, host);
+}
+
+char * getTipo(int in_fd)
+{
+  char tipo[500];
+  int codigo;
+  char * header = malloc (200);
+  recv (in_fd, header, 200, MSG_PEEK);
+  sscanf(header, "HTTP/1.0 %d %s\n", &codigo, tipo);
+  if (codigo == 404)
+    return "NOT FOUND";
+}
+
 void CatClient (int in_fd, int out_fd)
 {
   int bytes_rcvd = 1, bytes_sent = 0, i, j, cont = 0;
@@ -32,7 +50,7 @@ void CatClient (int in_fd, int out_fd)
   bzero(buf, sizeof(buf));
   bytes_rcvd = read (in_fd, buf, BUF_SIZE);
   write (out_fd, buf, bytes_rcvd);
-//  puts (buf);
+  //  puts (buf);
 
   free (buf);
 }
@@ -41,33 +59,17 @@ void CatServ (int in_fd, int out_fd)
 {
   int bytes_rcvd = 1, bytes_sent = 0, i, j, cont = 0;
   unsigned char * buf = (char *) malloc (BUF_SIZE); 
+  char * tipo; 
+  tipo  = getTipo(in_fd);
 
   while (bytes_rcvd > 0)
   {
     bzero(buf, sizeof(buf));
     bytes_rcvd = read (in_fd, buf, BUF_SIZE);
     write (out_fd, buf, bytes_rcvd);
-    //  puts (buf);
   }
 
   free (buf);
-}
-
-char* getHost(int in_fd)
-{
-  unsigned char *const header = malloc (150);
-  recv (in_fd, header, 150, MSG_PEEK);
-  char* dom = strstr(header,"//") + 2;
-  char * server =  strndup(dom, strlen(dom) - strlen(strchr(dom,'/') ));
-
-  return server;
-}
-
-void getInfo(int in_fd, char* URL, char* host)
-{
-  char * header = malloc (200);
-  recv (in_fd, header, 200, MSG_PEEK);
-  sscanf(header, "GET %s HTTP/1.0\nHost: %s\n", URL, host);
 }
 
 char* dirIP(char* serv){
@@ -78,8 +80,7 @@ char* dirIP(char* serv){
     printf("error de gethostbyname()\n");
     exit(-1);
   }
-
-  return inet_ntoa((struct in_addr *)he->h_addr);
+  return (char *) inet_ntoa(*((struct in_addr *)he->h_addr));
 }
 
 int connectToServer(char* server)
@@ -115,7 +116,7 @@ void complexRes(int in_fd){
   send (in_fd, header, strlen(header), 0);
 }
 
-void showPage (int in_fd, char * host)
+void showPage (int in_fd, char * host, char * IP, char* fecha, char* URL)
 {
   int out_fd = connectToServer(host);
 
@@ -127,8 +128,11 @@ void showPage (int in_fd, char * host)
   else
   {
     CatClient(in_fd, out_fd);
-    CatServ(out_fd, in_fd);
-  }
+    char * tipo = CatServ(out_fd, in_fd);
+  };
+
+  printf("%s %s %s %s", host, IP, fecha, URL);
+
 }
 
 int buscarLista(FILE* fd, char* input)

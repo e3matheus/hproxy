@@ -18,21 +18,17 @@
 
 int main(int argc, char** argv)
 {
-  char input[30], host[500], URL[500];
+  char host[500], URL[500]; 
+  char * fechaC;
   int chequeo, pid, clientaddrlength, sockfd, newsockfd;
-  char* puerto = chequearPuerto(argc, argv), ipCliente;
+  char* puerto = chequearPuerto(argc, argv);
   FILE* fd = abreArchivoDirecciones(argc, argv);
   FILE* logFd;
   struct sockaddr_in clientaddr, serveraddr;
+  time_t lt;
 
   chequearMaxArgumentos(argc);
   logFd = crearLog(argc, argv);
-
-     char* request = "GET http://www.danasoft.com/citysign.jpg HTTP/1.0\nHost: www.danasoft.com\nUser-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.14) Gecko/2009090905 Fedora/3.0.14-1.fc10 Firefox/3.0.14 GTB5\nAccept: image/png,image/*;q=0.8,*/*;q=0.5\nAccept-Language: en-us,en;q=0.5\nAccept-Encoding: gzip,deflate\nAccept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7\nConnection: close\nProxy-Connection: close\nReferer: http://www.ldc.usb.ve/~vtheok/\nPragma: no-cache\n";
-     sscanf(request, "GET %s HTTP/1.0\nHost: %s\n", URL, host);
-   printf ("el url es %s\n", URL);
-   printf ("el host es %s\n", host);
-
   /* Open a TCP socket. */
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0)
@@ -63,11 +59,13 @@ int main(int argc, char** argv)
     if (pid < 0)
       fatalerror("fork error");
     else if (pid == 0) {
-      ipCliente = inet_ntoa(clientaddr);
       /* I'm the child. */
       close(sockfd);
+      char * ipCliente = (char *) inet_ntoa(clientaddr.sin_addr);
+      lt = time(NULL);
+      fechaC = ctime(&lt); 
       getInfo(newsockfd, &URL, &host);
-      showPage(newsockfd, host);
+      showPage(newsockfd, &host, ipCliente, fechaC, URL);
       exit(EXIT_SUCCESS);
     }
     else
