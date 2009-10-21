@@ -19,13 +19,12 @@
 #include <stdio.h>
 #include <time.h>
 
-FILE* abreArchivoDirecciones(int, char**);
+char* listForbidden;  
+char* abreArchivoDirecciones(int, char**);
 void chequearMaxArgumentos(int);
 FILE* crearLog(int, char**);
 char* chequearPuerto(int, char**);
 
-void simpleRes(int);
-void complexRes(int);
 int connectToServer(char* );
 char* dirIP(char*);
 void CatClient (int , int );

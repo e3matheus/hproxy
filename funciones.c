@@ -39,7 +39,9 @@ char * getTipo(int in_fd)
   recv (in_fd, header, 200, MSG_PEEK);
   sscanf(header, "HTTP/1.0 %d %s\n", &codigo, tipo);
   if (codigo == 404)
-    return "NOT FOUND";
+    return "Not found";
+  else 
+    return "Sent";
 }
 
 void CatClient (int in_fd, int out_fd)
@@ -50,12 +52,11 @@ void CatClient (int in_fd, int out_fd)
   bzero(buf, sizeof(buf));
   bytes_rcvd = read (in_fd, buf, BUF_SIZE);
   write (out_fd, buf, bytes_rcvd);
-  //  puts (buf);
 
   free (buf);
 }
 
-void CatServ (int in_fd, int out_fd)
+char* CatServ (int in_fd, int out_fd)
 {
   int bytes_rcvd = 1, bytes_sent = 0, i, j, cont = 0;
   unsigned char * buf = (char *) malloc (BUF_SIZE); 
@@ -70,6 +71,7 @@ void CatServ (int in_fd, int out_fd)
   }
 
   free (buf);
+  return tipo;
 }
 
 char* dirIP(char* serv){
@@ -106,32 +108,75 @@ int connectToServer(char* server)
   return out;
 }
 
-void simpleRes(int in_fd){
-  char * header = "HTTP/1.0 403\nDate: Fri, 31 Dec 1999 23:59:59 GMT\nContent-Type: text/html\nContent-Length: 354\n\n<html><head></head><body><h2>La pagina esta en la lista de paginas prohibidas, si necesita informacion de esa pagina, contacte al administrador del sistema</h2></body></html>";
+void simpleRes(int in_fd, char * nombre){
+  char * header;
+  sscanf(header , "HTTP/1.0 403\nDate: Fri, 31 Dec 1999 23:59:59 GMT\nContent-Type: text/html\nContent-Length: 354\n\n<html><head></head><body><h2>La pagina %s esta en la lista de paginas prohibidas, si necesita informacion de esa pagina, contacte al administrador del sistema</h2></body></html>",nombre);
   send (in_fd, header, strlen(header), 0);
 }
 
-void complexRes(int in_fd){
-  char * header = "HTTP/1.0 403\nDate: Fri, 31 Dec 1999 23:59:59 GMT\nContent-Type: text/html\nContent-Length: 354\n\n<html><head></head><body><h2>La pagina esta contenida dentro de una pagina prohibida, si necesita informacion de esa pagina, contacte al administrador del sistema</h2></body></html>";
+void complexRes(int in_fd, char * nombre, char* nombreCompleto){
+  char * header;
+  sscanf(header, "HTTP/1.0 403\nDate: Fri, 31 Dec 1999 23:59:59 GMT\nContent-Type: text/html\nContent-Length: 354\n\n<html><head></head><body><h2>La pagina %d esta contenida dentro de la pagina prohibida %s, si necesita informacion de esa pagina, contacte al administrador del sistema</h2></body></html>", nombreCompleto, nombre);
   send (in_fd, header, strlen(header), 0);
 }
 
-void showPage (int in_fd, char * host, char * IP, char* fecha, char* URL)
+int checkList(char * URL){
+  char* auxiliar = malloc (200*sizeof(char*));
+ 
+  FILE* fd = fopen(listForbidden, "r");  
+
+  while (!feof(fd))
+  {
+    fscanf(fd,"%s\n",auxiliar);
+
+    if (strcmp(auxiliar, URL)==0)
+      {fclose(fd);
+      return 0;}
+  }
+  fclose(fd);
+
+  return 1;
+}
+
+int checkBeginning(char * URL){
+  char* auxiliar = malloc (200*sizeof(char*));
+ 
+  FILE* fd = fopen((char*) listForbidden,"r");  
+
+ while (!feof(fd))
+  {
+    fscanf(fd,"%s\n",auxiliar);
+    
+    if (strstr(URL, auxiliar) != NULL && strlen(auxiliar) != strlen(URL))
+      {fclose(fd);
+      return 0;}
+    bzero(auxiliar, sizeof(auxiliar));
+  }
+  fclose(fd);
+
+  return 1;
+}
+
+void showPage (FILE* fd, int in_fd, char * host, char * IP, char* fecha, char* URL)
 {
   int out_fd = connectToServer(host);
+  char * tipo;
 
   //Chequeo de Paginas Prohibidas.
-  if (strcmp(host, "www.google.com") == 0)    
-    simpleRes(in_fd);
-  else if  (strcmp(host, "www.yahoo.com") == 0)   
-    complexRes(in_fd);
-  else
-  {
+  if (checkList(URL) == 0)    
+{  simpleRes(in_fd, URL);
+  tipo = "forbidden";}
+else if (checkBeginning(URL) == 0)   
+{  complexRes(in_fd, URL, URL);
+  tipo = "forbidden";}
+else
+{
     CatClient(in_fd, out_fd);
-    char * tipo = CatServ(out_fd, in_fd);
+  tipo = CatServ(out_fd, in_fd);
   };
 
-  printf("%s %s %s %s", host, IP, fecha, URL);
+  //Imprime sobre el archivo de Trazas
+  fprintf(fd, "%s %s %s %s\n", IP, URL, tipo, fecha);
 
 }
 
@@ -167,7 +212,7 @@ FILE* crearLog(int numArgumentos, char** argv)
   }
 }
 
-FILE * abreArchivoDirecciones(int numArgumentos, char** argv)
+char* abreArchivoDirecciones(int numArgumentos, char** argv)
 {
   int cont = 1;
   FILE * fd;
@@ -180,7 +225,7 @@ FILE * abreArchivoDirecciones(int numArgumentos, char** argv)
       {
         printf("El archivo de error no pudo ser creado");
       }
-      return fd;
+      return argv[cont + 1];
     }
     cont +=2;
   }

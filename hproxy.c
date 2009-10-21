@@ -21,14 +21,15 @@ int main(int argc, char** argv)
   char host[500], URL[500]; 
   char * fechaC;
   int chequeo, pid, clientaddrlength, sockfd, newsockfd;
-  char* puerto = chequearPuerto(argc, argv);
-  FILE* fd = abreArchivoDirecciones(argc, argv);
+  char* puerto = chequearPuerto(argc, argv), tipo;
+  listForbidden = (char *) abreArchivoDirecciones(argc, argv);
   FILE* logFd;
   struct sockaddr_in clientaddr, serveraddr;
   time_t lt;
 
   chequearMaxArgumentos(argc);
   logFd = crearLog(argc, argv);
+
   /* Open a TCP socket. */
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0)
@@ -38,7 +39,7 @@ int main(int argc, char** argv)
   bzero(&serveraddr, sizeof(serveraddr));
   serveraddr.sin_family = AF_INET;
   serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  serveraddr.sin_port = htons(PORT);
+  serveraddr.sin_port = htons(atoi(puerto));
   if (bind(sockfd, (struct sockaddr *) &serveraddr,
         sizeof(serveraddr)) != 0)
     fatalerror("can't bind to socket");
@@ -65,23 +66,14 @@ int main(int argc, char** argv)
       lt = time(NULL);
       fechaC = ctime(&lt); 
       getInfo(newsockfd, &URL, &host);
-      showPage(newsockfd, &host, ipCliente, fechaC, URL);
+      showPage(logFd, newsockfd, &host, ipCliente, fechaC, URL);
+     
       exit(EXIT_SUCCESS);
     }
     else
       /* I'm the parent. */
       close(newsockfd);
-    /*    while(1){
-          printf("Que pagina desea abrir?\n");
-          scanf("%s", input);
-          if (strcmp((char *)input,"q") == 0)
-          { 
-          printf("Salida");
-          break;}
-          else if (strcmp((char *)input,"l") == 0)
-          printf("Imprime Log");
-          }
-          */  }
+  }
 
-    return 0;
+  return 0;
 }
